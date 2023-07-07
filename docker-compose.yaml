@@ -1,0 +1,44 @@
+version: '3'
+services:
+  db:
+    image: mysql:8.0
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: myapp
+    ports:
+      - 3309:3306
+    volumes:
+      - dbdata:/var/lib/mysql
+      - logs:/var/log/mysql
+
+  backend:
+    build:
+      context: .
+      dockerfile: ./Backend/Dockerfile
+    restart: always
+    ports:
+      - 8000:8000
+    volumes:
+      - ../ai-dev-backend:/var/www/html
+    working_dir: /var/www/html
+    command: ["php", "artisan", "serve", "--host", "0.0.0.0"]
+    depends_on:
+      - db
+
+  frontend:
+    image: node:14
+    restart: always
+    volumes:
+      - ../ai-dev-frontend:/app
+    working_dir: /app
+    environment:
+      - NODE_ENV=development
+    command: ["npm", "start"]
+    ports:
+      - 3001:3000
+
+volumes:
+  dbdata:
+  logs:
